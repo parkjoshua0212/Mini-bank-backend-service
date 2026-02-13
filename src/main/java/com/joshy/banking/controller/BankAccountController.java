@@ -1,23 +1,22 @@
 package com.joshy.banking.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.joshy.banking.dto.AccountResponse;
 import com.joshy.banking.dto.CreateAccountRequest;
 import com.joshy.banking.dto.DepositRequest;
 import com.joshy.banking.dto.TransferRequest;
 import com.joshy.banking.dto.WithdrawRequest;
-import com.joshy.banking.entity.BankAccount;
-import com.joshy.banking.service.BankAccountService;
 import com.joshy.banking.entity.Transaction;
 import com.joshy.banking.repository.TransactionRepository;
-
-import java.util.List;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import com.joshy.banking.service.BankAccountService;
 
 
 
@@ -33,17 +32,17 @@ public class BankAccountController {
     }
 
     @PostMapping
-    public BankAccount createBankAccount(@RequestBody CreateAccountRequest request) {
+    public AccountResponse createBankAccount(@RequestBody CreateAccountRequest request) {
         return bankAccountService.createBankAccount(request);
     }
 
     @PostMapping("/deposit")
-    public BankAccount deposit(@RequestBody DepositRequest request) {
+    public AccountResponse deposit(@RequestBody DepositRequest request) {
         return bankAccountService.deposit(request);
     }
 
     @PostMapping("/withdraw")
-    public BankAccount withdraw(@RequestBody WithdrawRequest request) {
+    public AccountResponse withdraw(@RequestBody WithdrawRequest request) {
         return bankAccountService.withdraw(request);
     }
 

@@ -6,6 +6,7 @@ import com.joshy.banking.dto.CreateUserRequest;
 import com.joshy.banking.dto.UserResponse;
 import com.joshy.banking.entity.User;
 import com.joshy.banking.repository.UserRepository;
+import com.joshy.banking.exception.BadRequestException;
 
 @Service
 public class UserService {
@@ -19,7 +20,7 @@ public class UserService {
     public UserResponse createUser(CreateUserRequest request) {
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+            throw new BadRequestException("Email already exists");
         }
 
         User user = new User(

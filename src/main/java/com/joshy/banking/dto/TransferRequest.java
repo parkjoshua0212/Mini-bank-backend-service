@@ -1,10 +1,12 @@
 package com.joshy.banking.dto;
 
+import java.math.BigDecimal;
+
 public class TransferRequest {
     
     private String fromAccount;
     private String toAccount;
-    private Double amount;
+    private BigDecimal amount;
 
     public String getFromAccount() {
         return fromAccount;
@@ -14,7 +16,7 @@ public class TransferRequest {
         return toAccount;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 

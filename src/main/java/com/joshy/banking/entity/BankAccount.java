@@ -1,5 +1,6 @@
 package com.joshy.banking.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,7 +26,7 @@ public class BankAccount {
     private String accountNumber;
 
     @Column(nullable = false)
-    private double balance;
+    private BigDecimal balance;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -36,7 +37,7 @@ public class BankAccount {
 
     public BankAccount() {
         this.createdAt = LocalDateTime.now();
-        this.balance = 0.0;
+        this.balance = BigDecimal.ZERO;
     }
 
     public long getId() {
@@ -47,11 +48,11 @@ public class BankAccount {
         return accountNumber;
     }
 
-    public double getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
 

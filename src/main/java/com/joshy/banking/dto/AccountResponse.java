@@ -1,15 +1,16 @@
 package com.joshy.banking.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class AccountResponse {
     
     private String accountNumber;
-    private Double balance;
+    private BigDecimal balance;
     private LocalDateTime createdAt;
 
     public AccountResponse(String accountNumber,
-                            Double balance,
+                            BigDecimal balance,
                             LocalDateTime createdAt) {
                                 this.accountNumber = accountNumber;
                                 this.balance = balance;
@@ -22,7 +23,7 @@ public class AccountResponse {
         return accountNumber;
     }
 
-    public Double getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 

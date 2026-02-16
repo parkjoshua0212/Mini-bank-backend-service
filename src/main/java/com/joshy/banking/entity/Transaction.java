@@ -1,5 +1,6 @@
 package com.joshy.banking.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
@@ -19,7 +20,7 @@ public class Transaction {
 
     private String type; // "DEPOSIT", "WITHDRAWAL", "TRANSFER"
 
-    private Double amount;
+    private BigDecimal amount;
 
     private String sourceAccount;
 
@@ -31,7 +32,7 @@ public class Transaction {
         this.timestamp = LocalDateTime.now();
     }
 
-    public Transaction(String type, Double amount, String sourceAccount, String destinationAccount) {
+    public Transaction(String type, BigDecimal amount, String sourceAccount, String destinationAccount) {
         this.type = type;
         this.amount = amount;
         this.sourceAccount = sourceAccount;
@@ -47,7 +48,7 @@ public class Transaction {
         return type;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 

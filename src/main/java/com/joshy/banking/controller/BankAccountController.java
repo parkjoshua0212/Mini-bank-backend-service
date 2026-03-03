@@ -1,5 +1,7 @@
 package com.joshy.banking.controller;
 
+import com.joshy.banking.dto.TransactionDTO;
+
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +48,7 @@ public class BankAccountController {
     )
     @ApiResponse(responseCode = "200", description = "Bank account created successfully")
     @PostMapping
-    public AccountResponse createBankAccount(@RequestBody CreateAccountRequest request) {
+    public AccountResponse createBankAccount(@Valid @RequestBody CreateAccountRequest request) {
         return bankAccountService.createBankAccount(request);
     }
 
@@ -68,7 +70,7 @@ public class BankAccountController {
     )
     @ApiResponse(responseCode = "200", description = "Funds withdrawn successfully")
     @PostMapping("/withdraw")
-    public AccountResponse withdraw(@RequestBody WithdrawRequest request) {
+    public AccountResponse withdraw(@Valid @RequestBody WithdrawRequest request) {
         return bankAccountService.withdraw(request);
     }
 
@@ -78,7 +80,7 @@ public class BankAccountController {
     )
     @ApiResponse(responseCode = "200", description = "Transfer completed successfully")
     @PostMapping("/transfer")
-    public String transfer(@RequestBody TransferRequest request){
+    public String transfer(@Valid @RequestBody TransferRequest request){
         bankAccountService.transfer(request);
         return "Transfer successful";
     }
@@ -88,7 +90,7 @@ public class BankAccountController {
         description = "Fetch paginated transaction history for a specific account."
     )
     @GetMapping("/{accountNumber}/transactions")
-    public Page<Transaction> getTransactions(
+    public Page<TransactionDTO> getTransactions(
             @PathVariable String accountNumber,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,

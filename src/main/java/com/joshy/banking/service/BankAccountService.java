@@ -12,6 +12,7 @@ import com.joshy.banking.entity.*;
 import com.joshy.banking.exception.BadRequestException;
 import com.joshy.banking.repository.*;
 
+
 import jakarta.transaction.Transactional;
 
 import org.springframework.data.domain.Page;
@@ -199,7 +200,7 @@ public class BankAccountService {
         return "ACC" + (100000 + random.nextInt(900000));
     }
 
-    public Page<Transaction> getTransactions(String accountNumber, int page, int size, String sortBy, String direction) {
+    public Page<TransactionDTO> getTransactions(String accountNumber, int page, int size, String sortBy, String direction) {
 
         Sort sort = direction.equalsIgnoreCase("desc")
         ? Sort.by(sortBy).descending()
@@ -207,13 +208,23 @@ public class BankAccountService {
 
          Pageable pageable = PageRequest.of(page, size, sort);
 
-        return transactionRepository
+         Page<Transaction> transactions = transactionRepository
                 .findBySourceAccountOrDestinationAccount(
                         accountNumber,
                         accountNumber,
                         pageable
                 );
-        }
 
+        return transactions.map(transaction ->
+                new TransactionDTO(
+                        transaction.getType(),
+                        transaction.getAmount(),
+                        transaction.getSourceAccount(),
+                        transaction.getDestinationAccount(),
+                        transaction.getTimestamp()
+                )
+        );
+
+    }
 }
 

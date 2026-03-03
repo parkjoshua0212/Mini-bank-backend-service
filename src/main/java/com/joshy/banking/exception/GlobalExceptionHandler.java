@@ -1,6 +1,7 @@
 package com.joshy.banking.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -16,27 +17,50 @@ public class GlobalExceptionHandler {
     private static final Logger logger =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    // 🔹 Handle custom BadRequestException
     @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, Object> handleBadRequestException(BadRequestException ex) {
 
         logger.warn("Bad request: {}", ex.getMessage());
 
-
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
         error.put("status", 400);
         error.put("error", ex.getMessage());
+
         return error;
     }
 
+    // 🔹 Handle Validation Errors (@Valid failures)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Object> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+
+        logger.warn("Validation failed: {}", ex.getMessage());
+
+        Map<String, String> fieldErrors = new HashMap<>();
+
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                fieldErrors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", 400);
+        response.put("errors", fieldErrors);
+
+        return response;
+    }
+
+    // 🔹 Handle All Other Unexpected Errors
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, Object> handleGenericException(Exception ex) {
 
         logger.error("Unexpected error: {}", ex.getMessage(), ex);
 
-        
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
         error.put("status", 500);
@@ -44,5 +68,4 @@ public class GlobalExceptionHandler {
 
         return error;
     }
-    
 }

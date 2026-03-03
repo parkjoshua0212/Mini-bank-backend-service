@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.DecimalMin;
 
 public class DepositRequest {
 
@@ -18,6 +19,7 @@ public class DepositRequest {
     @Schema(description = "Amount to deposit", example = "100.00")
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
 
     public String getAccountNumber() {

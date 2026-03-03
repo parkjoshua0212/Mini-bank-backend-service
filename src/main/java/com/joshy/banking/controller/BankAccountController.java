@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import org.springframework.data.domain.Page;
 
 import com.joshy.banking.dto.AccountResponse;
 import com.joshy.banking.dto.CreateAccountRequest;
@@ -54,6 +57,8 @@ public class BankAccountController {
     @ApiResponse(responseCode = "200", description = "Funds deposited successfully")
     @PostMapping("/deposit")
     public AccountResponse deposit(@Valid @RequestBody DepositRequest request) {
+
+
         return bankAccountService.deposit(request);
     }
 
@@ -78,9 +83,17 @@ public class BankAccountController {
         return "Transfer successful";
     }
 
+    @Operation(
+        summary = "Get transaction history",
+        description = "Fetch paginated transaction history for a specific account."
+    )
     @GetMapping("/{accountNumber}/transactions")
-    public List<Transaction> getTransactions(@PathVariable String accountNumber) {
-        return transactionRepository.findBySourceAccountOrDestinationAccount(accountNumber, accountNumber);
+    public Page<Transaction> getTransactions(
+            @PathVariable String accountNumber,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        return bankAccountService.getTransactions(accountNumber, page, size);
     }
     
 }

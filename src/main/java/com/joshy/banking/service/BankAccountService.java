@@ -3,25 +3,26 @@ package com.joshy.banking.service;
 import java.math.BigDecimal;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.joshy.banking.dto.AccountResponse;
-import com.joshy.banking.dto.CreateAccountRequest;
-import com.joshy.banking.dto.DepositRequest;
-import com.joshy.banking.dto.TransferRequest;
-import com.joshy.banking.dto.WithdrawRequest;
-import com.joshy.banking.entity.BankAccount;
-import com.joshy.banking.entity.Transaction;
-import com.joshy.banking.entity.User;
+import com.joshy.banking.dto.*;
+import com.joshy.banking.entity.*;
 import com.joshy.banking.exception.BadRequestException;
-import com.joshy.banking.repository.BankAccountRepository;
-import com.joshy.banking.repository.TransactionRepository;
-import com.joshy.banking.repository.UserRepository;
+import com.joshy.banking.repository.*;
 
 import jakarta.transaction.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 @Service
 public class BankAccountService {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(BankAccountService.class);
 
     private final BankAccountRepository bankAccountRepository;
     private final UserRepository userRepository;
@@ -37,8 +38,13 @@ public class BankAccountService {
 
     public AccountResponse createBankAccount(CreateAccountRequest request) {
 
+        logger.info("Creating bank account for user ID: {}", request.getUserId());
+
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new BadRequestException("User not found"));
+                .orElseThrow(() -> {
+                    logger.error("User not found with ID: {}", request.getUserId());
+                    return new RuntimeException("User not found");
+                });
 
         String accountNumber = generateAccountNumber();
 
@@ -49,6 +55,8 @@ public class BankAccountService {
 
         BankAccount savedAccount = bankAccountRepository.save(account);
 
+        logger.info("Bank account created successfully: {}", savedAccount.getAccountNumber());
+
         return new AccountResponse(
                 savedAccount.getAccountNumber(),
                 savedAccount.getBalance(),
@@ -58,17 +66,18 @@ public class BankAccountService {
 
     public AccountResponse deposit(DepositRequest request) {
 
+        logger.info("Deposit request: Account={}, Amount={}",
+                request.getAccountNumber(), request.getAmount());
+
         BankAccount account = bankAccountRepository
                 .findByAccountNumber(request.getAccountNumber())
-                .orElseThrow(() -> new BadRequestException("Account not found"));
+                .orElseThrow(() -> {
+                    logger.error("Deposit failed. Account not found: {}",
+                            request.getAccountNumber());
+                    return new RuntimeException("Account not found");
+                });
 
-        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BadRequestException("Deposit amount must be positive");
-        }
-
-        account.setBalance(
-                account.getBalance().add(request.getAmount())
-        );
+        account.setBalance(account.getBalance().add(request.getAmount()));
 
         Transaction transaction = new Transaction(
                 "DEPOSIT",
@@ -78,8 +87,11 @@ public class BankAccountService {
         );
 
         transactionRepository.save(transaction);
-
         BankAccount savedAccount = bankAccountRepository.save(account);
+
+        logger.info("Deposit successful. New balance for {} is {}",
+                savedAccount.getAccountNumber(),
+                savedAccount.getBalance());
 
         return new AccountResponse(
                 savedAccount.getAccountNumber(),
@@ -90,21 +102,25 @@ public class BankAccountService {
 
     public AccountResponse withdraw(WithdrawRequest request) {
 
+        logger.info("Withdrawal request: Account={}, Amount={}",
+                request.getAccountNumber(), request.getAmount());
+
         BankAccount account = bankAccountRepository
                 .findByAccountNumber(request.getAccountNumber())
-                .orElseThrow(() -> new BadRequestException("Account not found"));
-
-        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BadRequestException("Withdrawal amount must be positive");
-        }
+                .orElseThrow(() -> {
+                    logger.error("Withdrawal failed. Account not found: {}",
+                            request.getAccountNumber());
+                    return new RuntimeException("Account not found");
+                });
 
         if (account.getBalance().compareTo(request.getAmount()) < 0) {
+            logger.warn("Insufficient funds for account {}. Current balance: {}",
+                    account.getAccountNumber(),
+                    account.getBalance());
             throw new BadRequestException("Insufficient funds");
         }
 
-        account.setBalance(
-                account.getBalance().subtract(request.getAmount())
-        );
+        account.setBalance(account.getBalance().subtract(request.getAmount()));
 
         Transaction transaction = new Transaction(
                 "WITHDRAWAL",
@@ -114,8 +130,11 @@ public class BankAccountService {
         );
 
         transactionRepository.save(transaction);
-
         BankAccount savedAccount = bankAccountRepository.save(account);
+
+        logger.info("Withdrawal successful. New balance for {} is {}",
+                savedAccount.getAccountNumber(),
+                savedAccount.getBalance());
 
         return new AccountResponse(
                 savedAccount.getAccountNumber(),
@@ -127,33 +146,35 @@ public class BankAccountService {
     @Transactional
     public void transfer(TransferRequest request) {
 
-        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BadRequestException("Transfer amount must be greater than zero");
-        }
-
-        if (request.getFromAccount().equals(request.getToAccount())) {
-            throw new BadRequestException("Cannot transfer to the same account");
-        }
+        logger.info("Transfer request: From={}, To={}, Amount={}",
+                request.getFromAccount(),
+                request.getToAccount(),
+                request.getAmount());
 
         BankAccount fromAccount = bankAccountRepository
                 .findByAccountNumber(request.getFromAccount())
-                .orElseThrow(() -> new BadRequestException("Sender account not found"));
+                .orElseThrow(() -> {
+                    logger.error("Sender account not found: {}",
+                            request.getFromAccount());
+                    return new BadRequestException("Sender account not found");
+                });
 
         BankAccount toAccount = bankAccountRepository
                 .findByAccountNumber(request.getToAccount())
-                .orElseThrow(() -> new BadRequestException("Receiver account not found"));
+                .orElseThrow(() -> {
+                    logger.error("Receiver account not found: {}",
+                            request.getToAccount());
+                    return new BadRequestException("Receiver account not found");
+                });
 
         if (fromAccount.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new BadRequestException("Insufficient funds in sender account");
+            logger.warn("Transfer failed. Insufficient funds in account {}",
+                    fromAccount.getAccountNumber());
+            throw new BadRequestException("Insufficient funds");
         }
 
-        fromAccount.setBalance(
-                fromAccount.getBalance().subtract(request.getAmount())
-        );
-
-        toAccount.setBalance(
-                toAccount.getBalance().add(request.getAmount())
-        );
+        fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
+        toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
 
         bankAccountRepository.save(fromAccount);
         bankAccountRepository.save(toAccount);
@@ -166,10 +187,28 @@ public class BankAccountService {
         );
 
         transactionRepository.save(transaction);
+
+        logger.info("Transfer successful from {} to {}",
+                request.getFromAccount(),
+                request.getToAccount());
     }
 
     private String generateAccountNumber() {
         Random random = new Random();
         return "ACC" + (100000 + random.nextInt(900000));
     }
+
+    public Page<Transaction> getTransactions(String accountNumber, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return transactionRepository
+                .findBySourceAccountOrDestinationAccount(
+                        accountNumber,
+                        accountNumber,
+                        pageable
+                );
+        }
+
 }
+

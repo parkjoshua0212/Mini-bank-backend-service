@@ -91,9 +91,17 @@ public class BankAccountController {
     public Page<Transaction> getTransactions(
             @PathVariable String accountNumber,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "timestamp") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
 
-        return bankAccountService.getTransactions(accountNumber, page, size);
+        return bankAccountService.getTransactions(
+            accountNumber,
+            page,
+            size,
+            sortBy,
+            direction
+        );
     }
     
 }

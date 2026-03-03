@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class BankAccountService {
@@ -198,9 +199,13 @@ public class BankAccountService {
         return "ACC" + (100000 + random.nextInt(900000));
     }
 
-    public Page<Transaction> getTransactions(String accountNumber, int page, int size) {
+    public Page<Transaction> getTransactions(String accountNumber, int page, int size, String sortBy, String direction) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Sort sort = direction.equalsIgnoreCase("desc")
+        ? Sort.by(sortBy).descending()
+        : Sort.by(sortBy).ascending();
+
+         Pageable pageable = PageRequest.of(page, size, sort);
 
         return transactionRepository
                 .findBySourceAccountOrDestinationAccount(
